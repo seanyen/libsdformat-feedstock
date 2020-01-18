@@ -1,6 +1,9 @@
 --- CMakeLists.txt
 +++ CMakeLists.txt
-@@ -39,6 +39,8 @@
+@@ -41,12 +41,14 @@
+ 
+ set (project_cmake_dir ${PROJECT_SOURCE_DIR}/cmake
+   CACHE PATH "Location of CMake scripts")
  
  message (STATUS "${PROJECT_NAME} version ${SDF_VERSION_FULL}")
  set (CMAKE_INCLUDE_DIRECTORIES_PROJECT_BEFORE ON)
@@ -9,7 +12,13 @@
  
  #============================================================================
  # We turn off extensions because (1) we do not ever want to use non-standard
-@@ -102,17 +104,6 @@
+ # compiler extensions, and (2) this variable is on by default, causing cmake
+ # to choose the flag -std=gnu++14 instead of -std=c++14 when the C++14
+ # features are requested. Explicitly turning this flag off will force cmake to
+@@ -109,23 +111,12 @@
+ set (sdf_cmake_dir ${PROJECT_SOURCE_DIR}/cmake CACHE PATH
+      "Location of CMake scripts")
+ 
  include (${sdf_cmake_dir}/SDFUtils.cmake)
  
  message (STATUS "\n\n====== Finding 3rd Party Packages ======")
@@ -27,12 +36,19 @@
  include (${sdf_cmake_dir}/SearchForStuff.cmake)
  message (STATUS "----------------------------------------\n")
  
+ #####################################
+ # Set the default build type
+ if (NOT CMAKE_BUILD_TYPE)
+
 --- cmake/SDFUtils.cmake
 +++ cmake/SDFUtils.cmake
-@@ -128,10 +128,6 @@
+@@ -138,16 +138,12 @@
+         ${GTEST_SOURCE_file}
+         ${SDF_BUILD_TESTS_EXTRA_EXE_SRCS})
      elseif(WIN32)
        add_executable(${BINARY_NAME}
          ${GTEST_SOURCE_file}
+         ${SDF_BUILD_TESTS_EXTRA_EXE_SRCS}
 -        ${PROJECT_SOURCE_DIR}/src/win/tinyxml/tinystr.cpp
 -        ${PROJECT_SOURCE_DIR}/src/win/tinyxml/tinyxmlerror.cpp
 -        ${PROJECT_SOURCE_DIR}/src/win/tinyxml/tinyxml.cpp
@@ -40,49 +56,73 @@
        )
      else()
        message(FATAL_ERROR "Unsupported platform")
-@@ -157,6 +153,7 @@
+     endif()
+ 
+     add_dependencies(${BINARY_NAME}
+@@ -167,12 +163,13 @@
+       )
+     elseif(WIN32)
+       target_link_libraries(${BINARY_NAME}
          gtest.lib
          gtest_main.lib
-         sdformat.dll
+         ${sdf_target}
 +        ${tinyxml_LIBRARIES}
          ${IGNITION-MATH_LIBRARIES}
        )
  
+       # Copy in sdformat library
+       add_custom_command(TARGET ${BINARY_NAME}
+         COMMAND ${CMAKE_COMMAND} -E copy_if_different
+
 --- cmake/SearchForStuff.cmake
 +++ cmake/SearchForStuff.cmake
-@@ -70,7 +70,7 @@
- 
- if (NOT DEFINED USE_INTERNAL_URDF OR NOT USE_INTERNAL_URDF)
-   # check for urdfdom with pkg-config
--  pkg_check_modules(URDF urdfdom>=1.0)
-+  pkg_check_modules(URDF urdfdom>=1.0 IMPORTED_TARGET)
- 
-   if (NOT URDF_FOUND)
-     if (NOT DEFINED USE_INTERNAL_URDF)
-@@ -79,10 +79,6 @@
-     else()
-       BUILD_ERROR("Couldn't find the urdfdom >= 1.0 system installation")
-     endif()
--  else()
--    # what am I doing here? pkg-config and cmake
--    set(URDF_INCLUDE_DIRS ${URDF_INCLUDEDIR})
--    set(URDF_LIBRARY_DIRS ${URDF_LIBDIR})
+@@ -51,21 +51,25 @@
+     BUILD_ERROR("Couldn't find pkg-config for urdfdom")
    endif()
  endif()
  
+ if (NOT DEFINED USE_INTERNAL_URDF OR NOT USE_INTERNAL_URDF)
+   # check for urdfdom with pkg-config
+-  pkg_check_modules(URDF urdfdom>=1.0 IMPORTED_TARGET)
++  pkg_check_modules(URDF urdfdom>=1.0)
+ 
+   if (NOT URDF_FOUND)
+     if (NOT DEFINED USE_INTERNAL_URDF)
+       message(STATUS "Couldn't find urdfdom >= 1.0, using internal copy")
+       set(USE_INTERNAL_URDF true)
+     else()
+       BUILD_ERROR("Couldn't find the urdfdom >= 1.0 system installation")
+     endif()
++  else()
++    # what am I doing here? pkg-config and cmake
++    set(URDF_INCLUDE_DIRS ${URDF_INCLUDEDIR})
++    set(URDF_LIBRARY_DIRS ${URDF_LIBDIR})
+   endif()
+ endif()
+ 
+ #################################################
+ # Find ign command line utility:
+ find_package(ignition-tools)
+
 --- src/CMakeLists.txt
 +++ src/CMakeLists.txt
-@@ -105,7 +105,11 @@
+@@ -174,14 +174,18 @@
+ endif()
+ 
+ message (STATUS "URDF_LIBRARY_DIRS=${URDF_LIBRARY_DIRS}")
  message (STATUS "URDF_LIBRARIES=${URDF_LIBRARIES}")
  
  if (NOT USE_INTERNAL_URDF)
--  target_link_libraries(sdformat ${URDF_LIBRARIES})
+-  target_link_libraries(${sdf_target} PRIVATE ${URDF_LIBRARIES})
 +  if (TARGET PkgConfig::URDF)
-+    target_link_libraries(sdformat PkgConfig::URDF)
++    target_link_libraries(sdformat PRIVATE PkgConfig::URDF)
 +  else()
-+    target_link_libraries(sdformat ${URDF_LIBRARIES})
++    target_link_libraries(sdformat PRIVATE ${URDF_LIBRARIES})
 +  endif()
  endif()
  
- sdf_install_library(sdformat)
+ sdf_install_library(${sdf_target})
  
+ if(NOT WIN32)
+   add_subdirectory(cmd)
+ endif()
