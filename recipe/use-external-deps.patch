@@ -76,15 +76,15 @@
 
 --- cmake/SearchForStuff.cmake
 +++ cmake/SearchForStuff.cmake
-@@ -51,21 +51,25 @@
+@@ -51,25 +51,21 @@
      BUILD_ERROR("Couldn't find pkg-config for urdfdom")
    endif()
  endif()
  
  if (NOT DEFINED USE_INTERNAL_URDF OR NOT USE_INTERNAL_URDF)
    # check for urdfdom with pkg-config
--  pkg_check_modules(URDF urdfdom>=1.0 IMPORTED_TARGET)
-+  pkg_check_modules(URDF urdfdom>=1.0)
+-  pkg_check_modules(URDF urdfdom>=1.0)
++  pkg_check_modules(URDF urdfdom>=1.0 IMPORTED_TARGET)
  
    if (NOT URDF_FOUND)
      if (NOT DEFINED USE_INTERNAL_URDF)
@@ -93,10 +93,10 @@
      else()
        BUILD_ERROR("Couldn't find the urdfdom >= 1.0 system installation")
      endif()
-+  else()
-+    # what am I doing here? pkg-config and cmake
-+    set(URDF_INCLUDE_DIRS ${URDF_INCLUDEDIR})
-+    set(URDF_LIBRARY_DIRS ${URDF_LIBDIR})
+-  else()
+-    # what am I doing here? pkg-config and cmake
+-    set(URDF_INCLUDE_DIRS ${URDF_INCLUDEDIR})
+-    set(URDF_LIBRARY_DIRS ${URDF_LIBDIR})
    endif()
  endif()
  
