@@ -115,9 +115,9 @@
  if (NOT USE_INTERNAL_URDF)
 -  target_link_libraries(${sdf_target} PRIVATE ${URDF_LIBRARIES})
 +  if (TARGET PkgConfig::URDF)
-+    target_link_libraries(sdformat PRIVATE PkgConfig::URDF)
++    target_link_libraries(${sdf_target} PRIVATE PkgConfig::URDF)
 +  else()
-+    target_link_libraries(sdformat PRIVATE ${URDF_LIBRARIES})
++    target_link_libraries(${sdf_target} PRIVATE ${URDF_LIBRARIES})
 +  endif()
  endif()
  
