@@ -42,10 +42,7 @@
 
 --- cmake/SDFUtils.cmake
 +++ cmake/SDFUtils.cmake
-@@ -138,16 +138,12 @@
-         ${GTEST_SOURCE_file}
-         ${SDF_BUILD_TESTS_EXTRA_EXE_SRCS})
-     elseif(WIN32)
+@@ -141,10 +141,6 @@
        add_executable(${BINARY_NAME}
          ${GTEST_SOURCE_file}
          ${SDF_BUILD_TESTS_EXTRA_EXE_SRCS}
@@ -56,10 +53,11 @@
        )
      else()
        message(FATAL_ERROR "Unsupported platform")
-     endif()
- 
-     add_dependencies(${BINARY_NAME}
-@@ -167,12 +163,13 @@
+@@ -164,12 +160,14 @@
+         pthread
+         ${tinyxml_LIBRARIES}
+         ${IGNITION-MATH_LIBRARIES}
++        ${URDF_LIBRARIES}
        )
      elseif(WIN32)
        target_link_libraries(${BINARY_NAME}
@@ -70,9 +68,6 @@
          ${IGNITION-MATH_LIBRARIES}
        )
  
-       # Copy in sdformat library
-       add_custom_command(TARGET ${BINARY_NAME}
-         COMMAND ${CMAKE_COMMAND} -E copy_if_different
 
 --- cmake/SearchForStuff.cmake
 +++ cmake/SearchForStuff.cmake
