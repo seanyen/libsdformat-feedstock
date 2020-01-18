@@ -126,3 +126,22 @@
  if(NOT WIN32)
    add_subdirectory(cmd)
  endif()
+
+--- test/CMakeLists.txt
++++ test/CMakeLists.txt
+@@ -4,6 +4,7 @@
+   ${PROJECT_SOURCE_DIR}/test/gtest/include
+   ${PROJECT_SOURCE_DIR}/test/gtest
+   ${PROJECT_SOURCE_DIR}/test
++  ${tinyxml_INCLUDE_DIRS}
+   ${IGNITION-MATH_INCLUDE_DIRS}
+ )
+ 
+@@ -12,7 +13,6 @@
+ )
+ 
+ if (USE_EXTERNAL_TINYXML)
+-  include_directories(${tinyxml_INCLUDE_DIRS})
+   link_directories(${tinyxml_LIBRARY_DIRS})
+ endif()
+ 
