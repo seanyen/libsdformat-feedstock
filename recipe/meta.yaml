@@ -9,6 +9,8 @@ package:
 source:
   - url: https://bitbucket.org/osrf/sdformat/get/sdformat{{ major_version }}_{{ version }}.tar.gz
     sha256: a0b4d809c5ebbaaf9f5eb344ba779fa0714047ed5676a4ccc63808fc6db94fcc
+    patches:
+      - use-external-deps.patch
 
 build:
   number: 0
